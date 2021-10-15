@@ -19,21 +19,23 @@ String header;
 
 // --------------------------------- Setting up the motor pins as an array (e.g. Access the enable pin of the second motor with motor[1][2])
 // Where 0 - pin 1, 1 - pin2, 2 - enable for motors 0 and 1
-const int[][] motor = {{27, 33, 12}, {15, 32, 14}};
-const bool[] motorState = false;
-const int[] motorChn = {0, 2};
+int motor[2][3] = {{27, 33, 12}, {15, 32, 14}};
+bool motorState[2] = {false, false};
+int motorChn[2] = {0, 2};
 
-int[] dutyCycle = {0, 0};
+int dutyCycle[2] = {0, 0};
 
 void setup()
 {
     Serial.begin(115200);
     // --------------------------------- Init. the motor pins (not enable, that gets attached to )
     for (int i = 0; i < 2; i++)
+    {
         ledcSetup(motorChn[i], freq, res);
-    ledcAttachPin(motor[i][2], motorChn[i]);
-    for (int j = 0; j < 2; j++)
-        pinMode(motor[i][j], OUTPUT);
+        ledcAttachPin(motor[i][2], motorChn[i]);
+        for (int j = 0; j < 2; j++)
+            pinMode(motor[i][j], OUTPUT);
+    }
 
     // --------------------------------- Init. the Wifi point and connect to WiFi --------------------------------
 
@@ -85,18 +87,18 @@ void loop()
                             Serial.println("Motor on GPIO " + motor[0][0] + " starting");
                             motorState[0] = true;
 
-                            digitalWrite(motor1Pin1, HIGH);
-                            digitalWrite(motor1Pin2, LOW);
+                            digitalWrite(motor[0][0], HIGH);
+                            digitalWrite(motor[0][1], LOW);
 
-                            while (dutyCycleA <= maxDutyCycle)
+                            while (dutyCycle[0] <= maxDutyCycle)
                             {
-                                ledcWrite(enable1Pin, dutyCycleA);
+                                ledcWrite(motor[0][3], dutyCycle[0]);
 
-                                Serial.print("Forward with duty cycle(MotorA): ");
-                                Serial.println(dutyCycleA);
+                                Serial.print("Forward with duty cycle (MotorA): ");
+                                Serial.println(dutyCycle[0]);
 
-                                dutyCycleA = dutyCycleA + 5;
-                                delay(delayTime);
+                                dutyCycle[0] = dutyCycle[0] + 5;
+                                delay(delayChanging);
                             }
                         }
                         else if (header.indexOf("GET /" + motor[0][0] + "/off") >= 0)
@@ -104,35 +106,35 @@ void loop()
                             Serial.println("Motor on GPIO " + motor[0][0] + " stopping");
                             motorState[0] = false;
 
-                            dutyCycleA = 0;
-                            ledcWrite(enable1Pin, dutyCycleA);
+                            dutyCycle[0] = 0;
+                            ledcWrite(motor[0][3], dutyCycle[0]);
                         }
                         else if (header.indexOf("GET /" + motor[1][0] + "/on") >= 0)
                         { // Start motor B
-                            Serial.println("Motor on GPIO 15 starting");
-                            output15State = "on";
+                            Serial.println("Motor on GPIO " + motor[1][0] + " starting");
+                            motorState[1] = true;
 
                             digitalWrite(motor2Pin1, HIGH);
                             digitalWrite(motor2Pin2, LOW);
 
-                            while (dutyCycleB <= maxDutyCycle)
+                            while (dutyCycle[1] <= maxDutyCycle)
                             {
-                                ledcWrite(enable2Pin, dutyCycleB);
+                                ledcWrite(motor[1][2], dutyCycle[1]);
 
-                                Serial.print("Forward with duty cycle(MotorB): ");
-                                Serial.println(dutyCycleB);
+                                Serial.print("Forward with duty cycle (MotorB): ");
+                                Serial.println(dutyCycle[1]);
 
-                                dutyCycleB = dutyCycleB + 5;
-                                delay(delayTime);
+                                dutyCycle[1] = dutyCycle[1] + 5;
+                                delay(delayChanging);
                             }
                         }
                         else if (header.indexOf("GET /" + motor[1][0] + "/off") >= 0)
                         { // Stop motor B
-                            Serial.println("Motor on GPIO 15 stopping");
-                            output15State = "off";
+                            Serial.println("Motor on GPIO " + motor[1][0] + " stopping");
+                            motorState[1] = false;
 
-                            dutyCycleB = 0;
-                            ledcWrite(enable1Pin, dutyCycleB);
+                            dutyCycle[1] = 0;
+                            ledcWrite(motor[0][3], dutyCycle[1]);
                         }
 
                         // Display the HTML web page
@@ -163,9 +165,9 @@ void loop()
                         }
 
                         // Display current state, and ON/OFF buttons for GPIO 15
-                        client.println("<p>GPIO 15 - State " + output15State + "</p>");
-                        // If the output15State is off, it displays the ON button
-                        if (output15State == "off")
+                        client.println("<p>GPIO 15 - State " + motorState[1] + "</p>");
+                        // If the motorState[1] is off, it displays the ON button
+                        if (motorState[1] == "off")
                         {
                             client.println("<p><a href=\"/" + motor[1][0] + "/on\"><button class=\"button\">ON</button></a></p>");
                         }
