@@ -165,9 +165,9 @@ void loop()
                         }
 
                         // Display current state, and ON/OFF buttons for GPIO 15
-                        client.println("<p>GPIO 15 - State " + motorState[1] + "</p>");
+                        motorState[0] ? client.println("<p>GPIO " + motor[1][0] + " - State OFF</p>") : client.println("<p>GPIO " + motor[1][0] + " - State ON</p>");
                         // If the motorState[1] is off, it displays the ON button
-                        if (motorState[1] == "off")
+                        if (!motorState[1])
                         {
                             client.println("<p><a href=\"/" + motor[1][0] + "/on\"><button class=\"button\">ON</button></a></p>");
                         }
